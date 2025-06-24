@@ -5,8 +5,11 @@ phases:
     commands:
       - echo Logging in to Amazon ECR...
       - aws --version
-      - REPOSITORY_URI $REPOSITORY_URI
+      - echo Retrieving repository URI...
+      - REPOSITORY_URI=$(aws ecr describe-repositories --repository-name modernization-workshop --query 'repositories[0].repositoryUri' --output text)
+      - echo "Repository URI: $REPOSITORY_URI"
       - IMAGE_TAG=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - echo "Image Tag: $IMAGE_TAG"
       - aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin $REPOSITORY_URI
 
   build:
@@ -21,6 +24,5 @@ phases:
       - docker push $REPOSITORY_URI:$IMAGE_TAG
       - docker push $REPOSITORY_URI:latest
       - echo Creating imagedefinitions.json...
-      - printf '[{"name":"nodejs-container","imageUri":"%s"}]' "$REPOSITORY_URI:$IMAGE_TAG" > imagedefinitions.json
-
+      
 
